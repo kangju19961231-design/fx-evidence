@@ -514,7 +514,7 @@ function updateStats(trades) {
   }
   }
    // ---- Date grouping helpers ---
-  function getGroupKey(t, p)  {}
+  function getGroupKey(t, p)  {
     const d = new Date(t.trade_date);
     if (p === 'year') return d.getFullYear() + '-' + d.getMonth();
     return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
