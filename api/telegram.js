@@ -1,5 +1,5 @@
-// Telegram Bot Webhook â Vercel Serverless Function
-// Flow: Telegram photo â Claude OCR â Supabase save â Reply
+// Telegram Bot Webhook Ã¢ÂÂ Vercel Serverless Function
+// Flow: Telegram photo Ã¢ÂÂ Claude OCR Ã¢ÂÂ Supabase save Ã¢ÂÂ Reply
 
 export const config = { runtime: 'nodejs' };
 
@@ -18,57 +18,57 @@ export default async function handler(req, res) {
 
   const chatId = message.chat?.id;
 
-  // è¨±å¯ãããã¦ã¼ã¶ã¼ã®ã¿å¦ç
+  // Ã¨Â¨Â±Ã¥ÂÂ¯Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ£ÂÂ¦Ã£ÂÂ¼Ã£ÂÂ¶Ã£ÂÂ¼Ã£ÂÂ®Ã£ÂÂ¿Ã¥ÂÂ¦Ã§ÂÂ
   if (chatId !== ALLOWED_CHAT_ID) {
     return res.status(200).json({ ok: true });
   }
 
-  // ãã­ã¹ãã³ãã³ãå¦ç
+  // Ã£ÂÂÃ£ÂÂ­Ã£ÂÂ¹Ã£ÂÂÃ£ÂÂ³Ã£ÂÂÃ£ÂÂ³Ã£ÂÂÃ¥ÂÂ¦Ã§ÂÂ
   if (message.text) {
     if (message.text === '/start' || message.text === '/help') {
       await sendMessage(chatId,
-        'ð¸ <b>FX Evidence Bot</b>\n\n' +
-        'MT5ã®ç´å®å±¥æ­´ï¼ç´å®ã¿ãï¼ã®ã¹ã¯ãªã¼ã³ã·ã§ãããéãã¨èªåã§è¨é²ãã¾ãã\n\n' +
-        '1æ¥1æã1æ¥åã®åå¼ãã¾ã¨ããã¹ã¯ãªã¼ã³ã·ã§ãããéã£ã¦ãã ããã'
+        'Ã°ÂÂÂ¸ <b>FX Evidence Bot</b>\n\n' +
+        'MT5Ã£ÂÂ®Ã§Â´ÂÃ¥Â®ÂÃ¥Â±Â¥Ã¦Â­Â´Ã¯Â¼ÂÃ§Â´ÂÃ¥Â®ÂÃ£ÂÂ¿Ã£ÂÂÃ¯Â¼ÂÃ£ÂÂ®Ã£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂ³Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ©ÂÂÃ£ÂÂÃ£ÂÂ¨Ã¨ÂÂªÃ¥ÂÂÃ£ÂÂ§Ã¨Â¨ÂÃ©ÂÂ²Ã£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ\n\n' +
+        '1Ã¦ÂÂ¥1Ã¦ÂÂÃ£ÂÂ1Ã¦ÂÂ¥Ã¥ÂÂÃ£ÂÂ®Ã¥ÂÂÃ¥Â¼ÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂ¨Ã£ÂÂÃ£ÂÂÃ£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂ³Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ©ÂÂÃ£ÂÂ£Ã£ÂÂ¦Ã£ÂÂÃ£ÂÂ Ã£ÂÂÃ£ÂÂÃ£ÂÂ'
       );
     } else if (message.text === '/status') {
       const count = await getRecordCount();
-      await sendMessage(chatId, `ð ç¾å¨ ${count} æ¥åã®ãã¼ã¿ãè¨é²ããã¦ãã¾ãã`);
+      await sendMessage(chatId, `Ã°ÂÂÂ Ã§ÂÂ¾Ã¥ÂÂ¨ ${count} Ã¦ÂÂ¥Ã¥ÂÂÃ£ÂÂ®Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ¿Ã£ÂÂÃ¨Â¨ÂÃ©ÂÂ²Ã£ÂÂÃ£ÂÂÃ£ÂÂ¦Ã£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ`);
     }
     return res.status(200).json({ ok: true });
   }
 
-  // åçå¦ç
+  // Ã¥ÂÂÃ§ÂÂÃ¥ÂÂ¦Ã§ÂÂ
   if (!message.photo) {
-    await sendMessage(chatId, 'ð¸ MT5ã®ç´å®å±¥æ­´ã®ã¹ã¯ãªã¼ã³ã·ã§ãããéã£ã¦ãã ããã');
+    await sendMessage(chatId, 'Ã°ÂÂÂ¸ MT5Ã£ÂÂ®Ã§Â´ÂÃ¥Â®ÂÃ¥Â±Â¥Ã¦Â­Â´Ã£ÂÂ®Ã£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂ³Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ©ÂÂÃ£ÂÂ£Ã£ÂÂ¦Ã£ÂÂÃ£ÂÂ Ã£ÂÂÃ£ÂÂÃ£ÂÂ');
     return res.status(200).json({ ok: true });
   }
 
-  // å¦çä¸­ã¡ãã»ã¼ã¸
-  await sendMessage(chatId, 'â³ èª­ã¿åãä¸­...');
+  // Ã¥ÂÂ¦Ã§ÂÂÃ¤Â¸Â­Ã£ÂÂ¡Ã£ÂÂÃ£ÂÂ»Ã£ÂÂ¼Ã£ÂÂ¸
+  await sendMessage(chatId, 'Ã¢ÂÂ³ Ã¨ÂªÂ­Ã£ÂÂ¿Ã¥ÂÂÃ£ÂÂÃ¤Â¸Â­...');
 
   try {
-    // æé«ç»è³ªã®åçãåå¾
+    // Ã¦ÂÂÃ©Â«ÂÃ§ÂÂ»Ã¨Â³ÂªÃ£ÂÂ®Ã¥ÂÂÃ§ÂÂÃ£ÂÂÃ¥ÂÂÃ¥Â¾Â
     const photo = message.photo[message.photo.length - 1];
     const fileId = photo.file_id;
 
-    // Telegramãããã¡ã¤ã«URLãåå¾
+    // TelegramÃ£ÂÂÃ£ÂÂÃ£ÂÂÃ£ÂÂ¡Ã£ÂÂ¤Ã£ÂÂ«URLÃ£ÂÂÃ¥ÂÂÃ¥Â¾Â
     const fileInfoRes = await fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
     );
     const fileInfo = await fileInfoRes.json();
-    if (!fileInfo.ok) throw new Error('ãã¡ã¤ã«æå ±ã®åå¾ã«å¤±æãã¾ãã');
+    if (!fileInfo.ok) throw new Error('Ã£ÂÂÃ£ÂÂ¡Ã£ÂÂ¤Ã£ÂÂ«Ã¦ÂÂÃ¥Â Â±Ã£ÂÂ®Ã¥ÂÂÃ¥Â¾ÂÃ£ÂÂ«Ã¥Â¤Â±Ã¦ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ');
 
     const filePath = fileInfo.result.file_path;
     const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // ç»åããã¦ã³ã­ã¼ã
+    // Ã§ÂÂ»Ã¥ÂÂÃ£ÂÂÃ£ÂÂÃ£ÂÂ¦Ã£ÂÂ³Ã£ÂÂ­Ã£ÂÂ¼Ã£ÂÂ
     const imageRes = await fetch(fileUrl);
-    if (!imageRes.ok) throw new Error('ç»åã®ãã¦ã³ã­ã¼ãã«å¤±æãã¾ãã');
+    if (!imageRes.ok) throw new Error('Ã§ÂÂ»Ã¥ÂÂÃ£ÂÂ®Ã£ÂÂÃ£ÂÂ¦Ã£ÂÂ³Ã£ÂÂ­Ã£ÂÂ¼Ã£ÂÂÃ£ÂÂ«Ã¥Â¤Â±Ã¦ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ');
     const imageBuffer = await imageRes.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-    // Claude APIã§ç»åè§£æ
+    // Claude APIÃ£ÂÂ§Ã§ÂÂ»Ã¥ÂÂÃ¨Â§Â£Ã¦ÂÂ
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         messages: [{
           role: 'user',
@@ -92,21 +92,21 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: `ãã®MT5ã®ç´å®å±¥æ­´ï¼ç´å®ã¿ãï¼ã¹ã¯ãªã¼ã³ã·ã§ãããè§£æãã¦ãä»¥ä¸ã¯JSONã®ã¿è¿ãã¦ãã ãããèª¬ææã¯ä¸è¦ã§ãã
+              text: `Ã£ÂÂÃ£ÂÂ®MT5Ã£ÂÂ®Ã§Â´ÂÃ¥Â®ÂÃ¥Â±Â¥Ã¦Â­Â´Ã¯Â¼ÂÃ§Â´ÂÃ¥Â®ÂÃ£ÂÂ¿Ã£ÂÂÃ¯Â¼ÂÃ£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂ³Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ¨Â§Â£Ã¦ÂÂÃ£ÂÂÃ£ÂÂ¦Ã£ÂÂÃ¤Â»Â¥Ã¤Â¸ÂÃ£ÂÂ¯JSONÃ£ÂÂ®Ã£ÂÂ¿Ã¨Â¿ÂÃ£ÂÂÃ£ÂÂ¦Ã£ÂÂÃ£ÂÂ Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ¨ÂªÂ¬Ã¦ÂÂÃ¦ÂÂÃ£ÂÂ¯Ã¤Â¸ÂÃ¨Â¦ÂÃ£ÂÂ§Ã£ÂÂÃ£ÂÂ
 
 {
   "trade_date": "YYYY-MM-DD",
-  "settlements": <æ±ºæ¸åæ°ï¼"out"ã®åå¼æ°ï¼>,
-  "wins": <åã¡æ°ï¼ãã©ã¹ã¯P&Låå¼æ°ï¼>,
-  "losses": <è² ãæ°ï¼ãã¤ãã¹ã®P&Låå¼æ°ï¼>,
-  "pnl": <æçåè¨ï¼ç»é¢ä¸é¨ã®ãæç:ãã®æ°å¤ãã¹ãã¼ã¹ãªãã¯æ°å¤ï¼>
+  "settlements": <Ã¦Â±ÂºÃ¦Â¸ÂÃ¥ÂÂÃ¦ÂÂ°Ã¯Â¼Â"out"Ã£ÂÂ®Ã¥ÂÂÃ¥Â¼ÂÃ¦ÂÂ°Ã¯Â¼Â>,
+  "wins": <Ã¥ÂÂÃ£ÂÂ¡Ã¦ÂÂ°Ã¯Â¼ÂÃ£ÂÂÃ£ÂÂ©Ã£ÂÂ¹Ã£ÂÂ¯P&LÃ¥ÂÂÃ¥Â¼ÂÃ¦ÂÂ°Ã¯Â¼Â>,
+  "losses": <Ã¨Â²Â Ã£ÂÂÃ¦ÂÂ°Ã¯Â¼ÂÃ£ÂÂÃ£ÂÂ¤Ã£ÂÂÃ£ÂÂ¹Ã£ÂÂ®P&LÃ¥ÂÂÃ¥Â¼ÂÃ¦ÂÂ°Ã¯Â¼Â>,
+  "pnl": <Ã¦ÂÂÃ§ÂÂÃ¥ÂÂÃ¨Â¨ÂÃ¯Â¼ÂÃ§ÂÂ»Ã©ÂÂ¢Ã¤Â¸ÂÃ©ÂÂ¨Ã£ÂÂ®Ã£ÂÂÃ¦ÂÂÃ§ÂÂ:Ã£ÂÂÃ£ÂÂ®Ã¦ÂÂ°Ã¥ÂÂ¤Ã£ÂÂÃ£ÂÂ¹Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ¹Ã£ÂÂªÃ£ÂÂÃ£ÂÂ¯Ã¦ÂÂ°Ã¥ÂÂ¤Ã¯Â¼Â>
 }
 
-ã«ã¼ã«ï¼
-- "out"ï¼æ±ºæ¸ã»ã¯ã­ã¼ãºï¼ã®åå¼ã®ã¿ã«ã¦ã³ãã"in"ï¼ã¨ã³ããªã¼ï¼ã¯é¤ã
-- trade_dateã¯ç»é¢åã®åå¼æ¥ä»ï¼ä¾: "2026.03.09" â "2026-03-09"ï¼
-- pnlã¯æçæ¬ã®æ°å¤ããã®ã¾ã¾ï¼ä¾: "1 467.77" â 1467.77ï¼
-- JSONã®ã¿ãã³ã¼ããã­ãã¯ãä¸è¦`
+Ã£ÂÂ«Ã£ÂÂ¼Ã£ÂÂ«Ã¯Â¼Â
+- "out"Ã¯Â¼ÂÃ¦Â±ÂºÃ¦Â¸ÂÃ£ÂÂ»Ã£ÂÂ¯Ã£ÂÂ­Ã£ÂÂ¼Ã£ÂÂºÃ¯Â¼ÂÃ£ÂÂ®Ã¥ÂÂÃ¥Â¼ÂÃ£ÂÂ®Ã£ÂÂ¿Ã£ÂÂ«Ã£ÂÂ¦Ã£ÂÂ³Ã£ÂÂÃ£ÂÂ"in"Ã¯Â¼ÂÃ£ÂÂ¨Ã£ÂÂ³Ã£ÂÂÃ£ÂÂªÃ£ÂÂ¼Ã¯Â¼ÂÃ£ÂÂ¯Ã©ÂÂ¤Ã£ÂÂ
+- trade_dateÃ£ÂÂ¯Ã§ÂÂ»Ã©ÂÂ¢Ã¥ÂÂÃ£ÂÂ®Ã¥ÂÂÃ¥Â¼ÂÃ¦ÂÂ¥Ã¤Â»ÂÃ¯Â¼ÂÃ¤Â¾Â: "2026.03.09" Ã¢ÂÂ "2026-03-09"Ã¯Â¼Â
+- pnlÃ£ÂÂ¯Ã¦ÂÂÃ§ÂÂÃ¦Â¬ÂÃ£ÂÂ®Ã¦ÂÂ°Ã¥ÂÂ¤Ã£ÂÂÃ£ÂÂÃ£ÂÂ®Ã£ÂÂ¾Ã£ÂÂ¾Ã¯Â¼ÂÃ¤Â¾Â: "1 467.77" Ã¢ÂÂ 1467.77Ã¯Â¼Â
+- JSONÃ£ÂÂ®Ã£ÂÂ¿Ã£ÂÂÃ£ÂÂ³Ã£ÂÂ¼Ã£ÂÂÃ£ÂÂÃ£ÂÂ­Ã£ÂÂÃ£ÂÂ¯Ã£ÂÂÃ¤Â¸ÂÃ¨Â¦Â`
             }
           ]
         }]
@@ -114,25 +114,25 @@ export default async function handler(req, res) {
     });
 
     const claudeData = await claudeRes.json();
-    if (!claudeData.content?.[0]?.text) throw new Error('Claude APIããã®å¿ç­ãä¸æ­£ã§ã');
+    if (!claudeData.content?.[0]?.text) throw new Error('Claude APIÃ£ÂÂÃ£ÂÂÃ£ÂÂ®Ã¥Â¿ÂÃ§Â­ÂÃ£ÂÂÃ¤Â¸ÂÃ¦Â­Â£Ã£ÂÂ§Ã£ÂÂ');
 
     const responseText = claudeData.content[0].text.trim();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error(`JSONãè¦ã¤ããã¾ãã: ${responseText}`);
+    if (!jsonMatch) throw new Error(`JSONÃ£ÂÂÃ¨Â¦ÂÃ£ÂÂ¤Ã£ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ: ${responseText}`);
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // ããªãã¼ã·ã§ã³
+    // Ã£ÂÂÃ£ÂÂªÃ£ÂÂÃ£ÂÂ¼Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂ³
     if (!parsed.trade_date || typeof parsed.settlements !== 'number') {
-      throw new Error('ãã¼ã¿ã®è§£æã«å¤±æãã¾ãã');
+      throw new Error('Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ¿Ã£ÂÂ®Ã¨Â§Â£Ã¦ÂÂÃ£ÂÂ«Ã¥Â¤Â±Ã¦ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ');
     }
 
-    // åçè¨ç®
+    // Ã¥ÂÂÃ§ÂÂÃ¨Â¨ÂÃ§Â®Â
     const winRate = parsed.settlements > 0
       ? Math.round((parsed.wins / parsed.settlements) * 1000) / 10
       : 0;
 
-    // ã¹ã¯ãªã¼ã³ã·ã§ãããSupabase Storageã«ã¢ããã­ã¼ã
+    // Ã£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂ³Ã£ÂÂ·Ã£ÂÂ§Ã£ÂÂÃ£ÂÂÃ£ÂÂSupabase StorageÃ£ÂÂ«Ã£ÂÂ¢Ã£ÂÂÃ£ÂÂÃ£ÂÂ­Ã£ÂÂ¼Ã£ÂÂ
     let screenshotUrl = null;
     try {
       const uploadRes = await fetch(
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
       console.error('Storage upload error:', e);
     }
 
-    // Supabaseã«upsertï¼åãæ¥ä»ãªãä¸æ¸ãï¼
+    // SupabaseÃ£ÂÂ«upsertÃ¯Â¼ÂÃ¥ÂÂÃ£ÂÂÃ¦ÂÂ¥Ã¤Â»ÂÃ£ÂÂªÃ£ÂÂÃ¤Â¸ÂÃ¦ÂÂ¸Ã£ÂÂÃ¯Â¼Â
     const upsertRes = await fetch(
       `${SUPABASE_URL}/rest/v1/daily_records`,
       {
@@ -178,27 +178,27 @@ export default async function handler(req, res) {
 
     if (!upsertRes.ok) {
       const err = await upsertRes.text();
-      throw new Error(`Supabaseä¿å­ã¨ã©ã¼: ${err}`);
+      throw new Error(`SupabaseÃ¤Â¿ÂÃ¥Â­ÂÃ£ÂÂ¨Ã£ÂÂ©Ã£ÂÂ¼: ${err}`);
     }
 
-    // æåã¡ãã»ã¼ã¸
+    // Ã¦ÂÂÃ¥ÂÂÃ£ÂÂ¡Ã£ÂÂÃ£ÂÂ»Ã£ÂÂ¼Ã£ÂÂ¸
     const sign = parsed.pnl >= 0 ? '+' : '';
     const pnlFormatted = Math.abs(parsed.pnl).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
-    const pnlStr = `${sign}Â¥${parsed.pnl < 0 ? '-' : ''}${pnlFormatted}`;
+    const pnlStr = `${sign}ÃÂ¥${parsed.pnl < 0 ? '-' : ''}${pnlFormatted}`;
 
     await sendMessage(chatId,
-      `â <b>${parsed.trade_date} ã®è¨é²å®äºï¼</b>\n\n` +
-      `ð æ±ºæ¸åæ°: <b>${parsed.settlements}å</b>\n` +
-      `ð¢ åã¡: <b>${parsed.wins}å</b>\n` +
-      `ð´ è² ã: <b>${parsed.losses}å</b>\n` +
-      `ð åç: <b>${winRate}%</b>\n` +
-      `ð´ æç: <b>${sign}Â¥${pnlFormatted}</b>`
+      `Ã¢ÂÂ <b>${parsed.trade_date} Ã£ÂÂ®Ã¨Â¨ÂÃ©ÂÂ²Ã¥Â®ÂÃ¤ÂºÂÃ¯Â¼Â</b>\n\n` +
+      `Ã°ÂÂÂ Ã¦Â±ÂºÃ¦Â¸ÂÃ¥ÂÂÃ¦ÂÂ°: <b>${parsed.settlements}Ã¥ÂÂ</b>\n` +
+      `Ã°ÂÂÂ¢ Ã¥ÂÂÃ£ÂÂ¡: <b>${parsed.wins}Ã¥ÂÂ</b>\n` +
+      `Ã°ÂÂÂ´ Ã¨Â²Â Ã£ÂÂ: <b>${parsed.losses}Ã¥ÂÂ</b>\n` +
+      `Ã°ÂÂÂ Ã¥ÂÂÃ§ÂÂ: <b>${winRate}%</b>\n` +
+      `Ã°ÂÂÂ´ Ã¦ÂÂÃ§ÂÂ: <b>${sign}ÃÂ¥${pnlFormatted}</b>`
     );
 
   } catch (error) {
     console.error('Error:', error);
     await sendMessage(chatId,
-      `â ã¨ã©ã¼ãçºçãã¾ãã\n${error.message}\n\nããä¸åº¦éã£ã¦ãã ããã`
+      `Ã¢ÂÂ Ã£ÂÂ¨Ã£ÂÂ©Ã£ÂÂ¼Ã£ÂÂÃ§ÂÂºÃ§ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ\n${error.message}\n\nÃ£ÂÂÃ£ÂÂÃ¤Â¸ÂÃ¥ÂºÂ¦Ã©ÂÂÃ£ÂÂ£Ã£ÂÂ¦Ã£ÂÂÃ£ÂÂ Ã£ÂÂÃ£ÂÂÃ£ÂÂ`
     );
   }
 
@@ -229,8 +229,8 @@ async function getRecordCount() {
       }
     );
     const countHeader = res.headers.get('content-range');
-    return countHeader ? countHeader.split('/')[1] : 'ä¸æ';
+    return countHeader ? countHeader.split('/')[1] : 'Ã¤Â¸ÂÃ¦ÂÂ';
   } catch {
-    return 'ä¸æ';
+    return 'Ã¤Â¸ÂÃ¦ÂÂ';
   }
 }
