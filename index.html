@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FX Evidence — 取引記録</title>
+  <meta name="description" content="FX取引の第三者確認用エビデンス記録サイト">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0d1117;
+      --bg2:        #0a0d12;
+      --card:       #161b22;
+      --card2:      #1c2128;
+      --border:     #30363d;
+      --accent:     #00d4aa;
+      --accent-dim: rgba(0,212,170,0.12);
+      --text:       #e6edf3;
+      --muted:      #8b949e;
+      --profit:     #3fb950;
+      --loss:       #f85149;
+      --profit-bg:  rgba(63,185,80,0.13);
+      --loss-bg:    rgba(248,81,73,0.13);
+      --blue:       #1f6feb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-title span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .badge {
+      font-size: 11px; color: var(--muted);
+      background: var(--card); border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--profit);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; } 50% { opacity:0.3; }
+    }
+
+    /* ---- Main ---- */
+    .main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    /* ---- Stats ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+      transition: border-color .2s;
+    }
+    .stat-card:hover { border-color: var(--accent); }
+    .stat-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: .8px;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .stat-value { font-size: 22px; font-weight: 700; }
+    .stat-value.profit { color: var(--profit); }
+    .stat-value.loss   { color: var(--loss); }
+    .stat-value.accent { color: var(--accent); }
+    .stat-value.white  { color: var(--text); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ---- Controls ---- */
+    .controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+
+    .tabs {
+      display: flex; background: var(--card);
+      border: 1px solid var(--border); border-radius: 10px; padding: 3px;
+    }
+    .tab {
+      padding: 7px 22px; border-radius: 7px;
+      border: none; background: transparent;
+      color: var(--muted); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--blue); color: #fff; }
+
+    .date-nav { display: flex; align-items: center; gap: 6px; }
+    .nav-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .nav-btn:hover { background: var(--card2); border-color: var(--accent); }
+    .period-label { font-size: 15px; font-weight: 600; min-width: 180px; text-align: center; }
+    .today-btn {
+      padding: 6px 14px; border-radius: 8px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); font-size: 13px; cursor: pointer;
+      transition: all .15s;
+    }
+    .today-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ---- Trade Grid ---- */
+    .trades-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 18px;
+    }
+
+    .trade-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .trade-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(0,212,170,.1);
+    }
+
+    .trade-img-wrap {
+      position: relative; overflow: hidden;
+      background: var(--bg2);
+      aspect-ratio: 16/10;
+    }
+    .trade-img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .3s;
+    }
+    .trade-card:hover .trade-img { transform: scale(1.03); }
+    .trade-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 32px;
+    }
+
+    .trade-num-badge {
+      position: absolute; top: 8px; left: 8px;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px; padding: 2px 8px;
+      font-size: 11px; color: var(--muted);
+    }
+
+    .trade-info { padding: 14px 16px 16px; }
+    .trade-row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .trade-pair { font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+    .trade-pair.empty { color: var(--muted); font-weight: 400; font-size: 14px; }
+
+    .pnl-badge {
+      font-size: 13px; font-weight: 700;
+      padding: 3px 10px; border-radius: 7px;
+    }
+    .pnl-badge.profit { background: var(--profit-bg); color: var(--profit); }
+    .pnl-badge.loss   { background: var(--loss-bg);   color: var(--loss); }
+    .pnl-badge.neutral { background: var(--card2); color: var(--muted); }
+
+    .trade-date { font-size: 12px; color: var(--muted); }
+    .trade-caption {
+      font-size: 12px; color: var(--muted); margin-top: 7px;
+      line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ---- Empty / Loading ---- */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center; padding: 80px 20px; color: var(--muted);
+    }
+    .empty-icon { font-size: 52px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; }
+
+    .loading-state {
+      grid-column: 1 / -1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 80px; gap: 16px; color: var(--muted);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Lightbox ---- */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,.93);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .lightbox.open { display: flex; }
+    .lb-wrap { position: relative; max-width: 92vw; max-height: 92vh; }
+    .lb-img { max-width: 100%; max-height: 82vh; border-radius: 10px; display: block; }
+    .lb-close {
+      position: absolute; top: -38px; right: 0;
+      background: none; border: none; color: #fff;
+      font-size: 26px; cursor: pointer; line-height: 1;
+      opacity: .7; transition: opacity .15s;
+    }
+    .lb-close:hover { opacity: 1; }
+    .lb-footer {
+      background: rgba(0,0,0,.8); border-radius: 0 0 10px 10px;
+      padding: 12px 18px; display: flex;
+      justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .lb-pair { font-size: 16px; font-weight: 700; }
+    .lb-date { font-size: 13px; color: var(--muted); }
+    .lb-nav {
+      display: flex; gap: 8px;
+    }
+    .lb-nav-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+      color: #fff; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .lb-nav-btn:hover { background: rgba(255,255,255,.2); }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 640px) {
+      .header { padding: 0 16px; }
+      .main { padding: 20px 14px 48px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .controls { gap: 8px; }
+      .period-label { min-width: 120px; font-size: 13px; }
+      .trades-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">📊</div>
+    <div class="header-title">FX <span>Evidence</span></div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"></div>
+    <div class="badge">第三者確認用 · 公開記録</div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">取引回数（期間）</div>
+      <div class="stat-value white" id="s-count">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">通貨ペア数</div>
+      <div class="stat-value accent" id="s-pairs">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">累計登録数</div>
+      <div class="stat-value white" id="s-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">最終登録</div>
+      <div class="stat-value white" id="s-latest" style="font-size:15px;line-height:1.3">—</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="tabs">
+      <button class="tab active" data-period="day"   onclick="setPeriod('day',this)">日別</button>
+      <button class="tab"        data-period="week"  onclick="setPeriod('week',this)">週別</button>
+      <button class="tab"        data-period="month" onclick="setPeriod('month',this)">月別</button>
+      <button class="tab"        data-period="year"  onclick="setPeriod('year',this)">年別</button>
+    </div>
+    <div class="date-nav">
+      <button class="nav-btn" onclick="navigate(-1)">‹</button>
+      <span class="period-label" id="period-label">読み込み中...</span>
+      <button class="nav-btn" onclick="navigate(1)">›</button>
+      <button class="today-btn" onclick="goToday()">今日</button>
+    </div>
+  </div>
+
+  <!-- Trades -->
+  <div class="trades-grid" id="grid">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>読み込み中...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="lbBgClick(event)">
+  <div class="lb-wrap">
+    <button class="lb-close" onclick="closeLb()">✕</button>
+    <img class="lb-img" id="lb-img" src="" alt="取引エビデンス">
+    <div class="lb-footer">
+      <div>
+        <div class="lb-pair" id="lb-pair">—</div>
+        <div class="lb-date" id="lb-date">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="pnl-badge neutral" id="lb-pnl"></span>
+        <div class="lb-nav">
+          <button class="lb-nav-btn" onclick="lbNav(-1)">‹</button>
+          <button class="lb-nav-btn" onclick="lbNav(1)">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+//  CONFIG — Supabaseの値に差し替えてください
+// ================================================================
+const SUPABASE_URL     = 'YOUR_SUPABASE_URL';      // 例: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Supabase > Settings > API > anon key
+// ================================================================
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let period   = 'day';
+let cursor   = new Date();
+let allTrades = [];
+let lbIndex  = 0;
+
+// ---- Date utilities ----
+function getRange(p, d) {
+  const date = new Date(d);
+  let s, e;
+  if (p === 'day') {
+    s = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    e = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+  } else if (p === 'week') {
+    const day = date.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    s = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+    e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6, 23, 59, 59, 999);
+  } else if (p === 'month') {
+    s = new Date(date.getFullYear(), date.getMonth(), 1);
+    e = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+  } else {
+    s = new Date(date.getFullYear(), 0, 1);
+    e = new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
+  }
+  return { s, e };
+}
+
+function getLabel(p, d) {
+  const date = new Date(d);
+  const today = new Date();
+  if (p === 'day') {
+    if (date.toDateString() === today.toDateString()) return '今日';
+    const yd = new Date(today); yd.setDate(today.getDate() - 1);
+    if (date.toDateString() === yd.toDateString()) return '昨日';
+    return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  }
+  if (p === 'week') {
+    const { s, e } = getRange('week', date);
+    const fmt = d => d.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
+    return `${fmt(s)} 〜 ${fmt(e)}`;
+  }
+  if (p === 'month') return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' });
+  return `${date.getFullYear()}年`;
+}
+
+function navigate(dir) {
+  const d = new Date(cursor);
+  if (period === 'day')   d.setDate(d.getDate() + dir);
+  if (period === 'week')  d.setDate(d.getDate() + dir * 7);
+  if (period === 'month') d.setMonth(d.getMonth() + dir);
+  if (period === 'year')  d.setFullYear(d.getFullYear() + dir);
+  cursor = d;
+  load();
+}
+
+function goToday() { cursor = new Date(); load(); }
+
+function setPeriod(p, el) {
+  period = p;
+  cursor = new Date();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  load();
+}
+
+// ---- P&L helpers ----
+function pnlClass(v) {
+  if (!v) return 'neutral';
+  const s = String(v);
+  if (s.includes('+') || /^\d/.test(s.trim())) return 'profit';
+  if (s.includes('-')) return 'loss';
+  return 'neutral';
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s; return d.innerHTML;
+}
+
+// ---- Load & render ----
+async function load() {
+  document.getElementById('period-label').textContent = getLabel(period, cursor);
+  const grid = document.getElementById('grid');
+  grid.innerHTML = `<div class="loading-state"><div class="spinner"></div><div>読み込み中...</div></div>`;
+
+  const { s, e } = getRange(period, cursor);
+
+  const { data, error } = await db
+    .from('trades')
+    .select('*')
+    .gte('trade_date', s.toISOString())
+    .lte('trade_date', e.toISOString())
+    .order('trade_date', { ascending: false });
+
+  if (error) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">接続エラー</div><div class="empty-sub">${esc(error.message)}</div></div>`;
+    return;
+  }
+
+  allTrades = data || [];
+  updateStats(allTrades);
+  renderGrid(allTrades);
+}
+
+function updateStats(trades) {
+  document.getElementById('s-count').textContent = trades.length + '回';
+  const pairs = new Set(trades.filter(t => t.currency_pair).map(t => t.currency_pair));
+  document.getElementById('s-pairs').textContent = pairs.size ? pairs.size + '種類' : '—';
+  if (trades.length > 0) {
+    const d = new Date(trades[0].trade_date);
+    document.getElementById('s-latest').textContent =
+      d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }) + ' ' +
+      d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    document.getElementById('s-latest').textContent = '—';
+  }
+}
+
+async function loadTotal() {
+  const { count } = await db.from('trades').select('*', { count: 'exact', head: true });
+  document.getElementById('s-total').textContent = (count || 0) + '回';
+}
+
+function renderGrid(trades) {
+  const grid = document.getElementById('grid');
+  if (!trades.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📷</div>
+        <div class="empty-title">この期間の取引記録はありません</div>
+        <div class="empty-sub">Telegramボットにスクリーンショットを送信してください</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  trades.forEach((t, i) => {
+    const d = new Date(t.trade_date);
+    const pc = pnlClass(t.profit_loss);
+    const card = document.createElement('div');
+    card.className = 'trade-card';
+    card.onclick = () => openLb(i);
+    card.innerHTML = `
+      <div class="trade-img-wrap">
+        ${t.image_url
+          ? `<img class="trade-img" src="${esc(t.image_url)}" alt="取引エビデンス" loading="lazy">`
+          : `<div class="trade-img-placeholder">📷</div>`}
+        <div class="trade-num-badge">#${trades.length - i}</div>
+      </div>
+      <div class="trade-info">
+        <div class="trade-row1">
+          <span class="trade-pair ${t.currency_pair ? '' : 'empty'}">${t.currency_pair || '通貨ペア未設定'}</span>
+          ${t.profit_loss ? `<span class="pnl-badge ${pc}">${esc(t.profit_loss)}</span>` : ''}
+        </div>
+        <div class="trade-date">${d.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+        ${t.caption ? `<div class="trade-caption">${esc(t.caption)}</div>` : ''}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ---- Lightbox ----
+function openLb(idx) {
+  lbIndex = idx;
+  showLb(allTrades[idx]);
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLb() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lbBgClick(e) {
+  if (e.target === document.getElementById('lightbox')) closeLb();
+}
+function lbNav(dir) {
+  lbIndex = (lbIndex + dir + allTrades.length) % allTrades.length;
+  showLb(allTrades[lbIndex]);
+}
+function showLb(t) {
+  const d = new Date(t.trade_date);
+  document.getElementById('lb-img').src = t.image_url || '';
+  document.getElementById('lb-pair').textContent = t.currency_pair || '通貨ペア未設定';
+  document.getElementById('lb-date').textContent = d.toLocaleString('ja-JP');
+  const pnl = document.getElementById('lb-pnl');
+  pnl.textContent = t.profit_loss || '';
+  pnl.className = 'pnl-badge ' + pnlClass(t.profit_loss);
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape')      closeLb();
+  if (e.key === 'ArrowRight')  lbNav(1);
+  if (e.key === 'ArrowLeft')   lbNav(-1);
+});
+
+// ---- Boot ----
+load();
+loadTotal();
+</script>
+</body>
+</html>
