@@ -304,20 +304,20 @@
   <!-- Stats -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-label">取引回数（期間）</div>
-      <div class="stat-value white" id="s-count">—</div>
+      <div class="stat-label">取引日数</div>
+      <div class="stat-value whte" id="s-days">—</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">通貨ペア数</div>
-      <div class="stat-value accent" id="s-pairs">—</div>
+      <div class="stat-label">勝ち数</div>
+      <div class="stat-value" id="s-wins">—</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">累計登録数</div>
-      <div class="stat-value white" id="s-total">—</div>
+      <div class="stat-label">負け数</div>
+      <div class="stat-value" id="s-losses">—</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">最終登録</div>
-      <div class="stat-value white" id="s-latest" style="font-size:15px;line-height:1.3">—</div>
+      <div class="stat-label">総利益</div>
+      <div class="stat-value" id="s-pnl">—</div>
     </div>
   </div>
 
@@ -410,9 +410,6 @@ function getLabel(p, d) {
   const date = new Date(d);
   const today = new Date();
   if (p === 'day') {
-    if (date.toDateString() === today.toDateString()) return '今日';
-    const yd = new Date(today); yd.setDate(today.getDate() - 1);
-    if (date.toDateString() === yd.toDateString()) return '昨日';
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   }
   if (p === 'week') {
@@ -484,26 +481,40 @@ async function load() {
 }
 
 function updateStats(trades) {
-  document.getElementById('s-count').textContent = trades.length + '回';
-  const pairs = new Set(trades.filter(t => t.currency_pair).map(t => t.currency_pair));
-  document.getElementById('s-pairs').textContent = pairs.size ? pairs.size + '種類' : '—';
-  if (trades.length > 0) {
-    const d = new Date(trades[0].trade_date);
-    document.getElementById('s-latest').textContent =
-      d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }) + ' ' +
-      d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-  } else {
-    document.getElementById('s-latest').textContent = '—';
-  }
-}
-
-async function loadTotal() {
-  const { count } = await db.from('trades').select('*', { count: 'exact', head: true });
-  document.getElementById('s-total').textContent = (count || 0) + '回';
-}
-
+    const uniqueDays = new Set(trades.map(t => {
+        const d = new Date(t.trade_date);
+            return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+              }));
+                document.getElementById('s-days').textContent = uniqueDays.size ? uniqueDays.size + '日' : '−';
+                  let wins = 0, losses = 0;
+                    trades.forEach(t => {
+                        if (!t.profit_loss) return;
+                            const s = String(t.profit_loss).trim();
+                                if (s.includes('-')) losses++;
+                                    else if (s.match(/[+\d]/)) wins++;
+                                      });
+                                        document.getElementById('s-wins').textContent = wins ? wins + '回' : '−';
+                                          document.getElementById('s-wins').style.color = wins > 0 ? '#68d391' : '';
+                                            document.getElementById('s-losses').textContent = losses ? losses + '回' : '−';
+                                              document.getElementById('s-losses').style.color = losses > 0 ? '#fc8181' : '';
+                                                let total = 0, hasValue = false;
+                                                  trades.forEach(t => {
+                                                      if (!t.profit_loss) return;
+                                                          const m = String(t.profit_loss).replace(/,/g, '').match(/([+-]?\d+\.?\d*)/);
+                                                              if (m) { total += parseFloat(m[1]); hasValue = true; }
+                                                                });
+                                                                  const pnlEl = document.getElementById('s-pnl');
+                                                                    if (hasValue) {
+                                                                        const sign = total >= 0 ? '+' : '';
+                                                                            pnlEl.textContent = sign + total.toLocaleString('ja-JP', { maximumFractionDigits: 1 });
+                                                                                pnlEl.style.color = total >= 0 ? '#68d391' : '#fc8181';
+                                                                                  } else {
+                                                                                      pnlEl.textContent = '−';
+                                                                                          pnlEl.style.color = '';
+                                                                                            }
+                                                                                            }
   // ---- Date grouping helpers ----
-  function getGroupKey(t, p) {
+  function getGroupKey(t, p) 
     const d = new Date(t.trade_date);
     if (p === 'year') return d.getFullYear() + '-' + d.getMonth();
     return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
@@ -608,7 +619,6 @@ document.addEventListener('keydown', e => {
 
 // ---- Boot ----
 load();
-loadTotal();
 </script>
 </body>
 </html>
