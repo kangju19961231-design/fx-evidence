@@ -1,7 +1,7 @@
-// Telegram Bot Webhook — Vercel Serverless Function
-// Flow: Telegram photo → Claude OCR → Supabase save → Reply
+// Telegram Bot Webhook â Vercel Serverless Function
+// Flow: Telegram photo â Claude OCR â Supabase save â Reply
 
-export const config = { runtime: 'nodejs20.x' };
+export const config = { runtime: 'nodejs' };
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -18,57 +18,57 @@ export default async function handler(req, res) {
 
   const chatId = message.chat?.id;
 
-  // 許可されたユーザーのみ処理
+  // è¨±å¯ãããã¦ã¼ã¶ã¼ã®ã¿å¦ç
   if (chatId !== ALLOWED_CHAT_ID) {
     return res.status(200).json({ ok: true });
   }
 
-  // テキストコマンド処理
+  // ãã­ã¹ãã³ãã³ãå¦ç
   if (message.text) {
     if (message.text === '/start' || message.text === '/help') {
       await sendMessage(chatId,
-        '📸 <b>FX Evidence Bot</b>\n\n' +
-        'MT5の約定履歴（約定タブ）のスクリーンショットを送ると自動で記録します。\n\n' +
-        '1日1枚、1日分の取引をまとめたスクリーンショットを送ってください。'
+        'ð¸ <b>FX Evidence Bot</b>\n\n' +
+        'MT5ã®ç´å®å±¥æ­´ï¼ç´å®ã¿ãï¼ã®ã¹ã¯ãªã¼ã³ã·ã§ãããéãã¨èªåã§è¨é²ãã¾ãã\n\n' +
+        '1æ¥1æã1æ¥åã®åå¼ãã¾ã¨ããã¹ã¯ãªã¼ã³ã·ã§ãããéã£ã¦ãã ããã'
       );
     } else if (message.text === '/status') {
       const count = await getRecordCount();
-      await sendMessage(chatId, `📊 現在 ${count} 日分のデータが記録されています。`);
+      await sendMessage(chatId, `ð ç¾å¨ ${count} æ¥åã®ãã¼ã¿ãè¨é²ããã¦ãã¾ãã`);
     }
     return res.status(200).json({ ok: true });
   }
 
-  // 写真処理
+  // åçå¦ç
   if (!message.photo) {
-    await sendMessage(chatId, '📸 MT5の約定履歴のスクリーンショットを送ってください。');
+    await sendMessage(chatId, 'ð¸ MT5ã®ç´å®å±¥æ­´ã®ã¹ã¯ãªã¼ã³ã·ã§ãããéã£ã¦ãã ããã');
     return res.status(200).json({ ok: true });
   }
 
-  // 処理中メッセージ
-  await sendMessage(chatId, '⏳ 読み取り中...');
+  // å¦çä¸­ã¡ãã»ã¼ã¸
+  await sendMessage(chatId, 'â³ èª­ã¿åãä¸­...');
 
   try {
-    // 最高画質の写真を取得
+    // æé«ç»è³ªã®åçãåå¾
     const photo = message.photo[message.photo.length - 1];
     const fileId = photo.file_id;
 
-    // TelegramからファイルURLを取得
+    // Telegramãããã¡ã¤ã«URLãåå¾
     const fileInfoRes = await fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`
     );
     const fileInfo = await fileInfoRes.json();
-    if (!fileInfo.ok) throw new Error('ファイル情報の取得に失敗しました');
+    if (!fileInfo.ok) throw new Error('ãã¡ã¤ã«æå ±ã®åå¾ã«å¤±æãã¾ãã');
 
     const filePath = fileInfo.result.file_path;
     const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
 
-    // 画像をダウンロード
+    // ç»åããã¦ã³ã­ã¼ã
     const imageRes = await fetch(fileUrl);
-    if (!imageRes.ok) throw new Error('画像のダウンロードに失敗しました');
+    if (!imageRes.ok) throw new Error('ç»åã®ãã¦ã³ã­ã¼ãã«å¤±æãã¾ãã');
     const imageBuffer = await imageRes.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-    // Claude APIで画像解析
+    // Claude APIã§ç»åè§£æ
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -92,21 +92,21 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: `このMT5の約定履歴（約定タブ）スクリーンショットを解析して、以下はJSONのみ返してください。説明文は不要です。
+              text: `ãã®MT5ã®ç´å®å±¥æ­´ï¼ç´å®ã¿ãï¼ã¹ã¯ãªã¼ã³ã·ã§ãããè§£æãã¦ãä»¥ä¸ã¯JSONã®ã¿è¿ãã¦ãã ãããèª¬ææã¯ä¸è¦ã§ãã
 
 {
   "trade_date": "YYYY-MM-DD",
-  "settlements": <決済回数（"out"の取引数）>,
-  "wins": <勝ち数（プラスはP&L取引数）>,
-  "losses": <負け数（マイナスのP&L取引数）>,
-  "pnl": <損益合計（画面上部の「損益:」の数値、スペースなしは数値）>
+  "settlements": <æ±ºæ¸åæ°ï¼"out"ã®åå¼æ°ï¼>,
+  "wins": <åã¡æ°ï¼ãã©ã¹ã¯P&Låå¼æ°ï¼>,
+  "losses": <è² ãæ°ï¼ãã¤ãã¹ã®P&Låå¼æ°ï¼>,
+  "pnl": <æçåè¨ï¼ç»é¢ä¸é¨ã®ãæç:ãã®æ°å¤ãã¹ãã¼ã¹ãªãã¯æ°å¤ï¼>
 }
 
-ルール：
-- "out"（決済・クローズ）の取引のみカウント、"in"（エントリー）は除く
-- trade_dateは画面内の取引日付（例: "2026.03.09" → "2026-03-09"）
-- pnlは損益欄の数値をそのまま（例: "1 467.77" → 1467.77）
-- JSONのみ、コードブロックも不要`
+ã«ã¼ã«ï¼
+- "out"ï¼æ±ºæ¸ã»ã¯ã­ã¼ãºï¼ã®åå¼ã®ã¿ã«ã¦ã³ãã"in"ï¼ã¨ã³ããªã¼ï¼ã¯é¤ã
+- trade_dateã¯ç»é¢åã®åå¼æ¥ä»ï¼ä¾: "2026.03.09" â "2026-03-09"ï¼
+- pnlã¯æçæ¬ã®æ°å¤ããã®ã¾ã¾ï¼ä¾: "1 467.77" â 1467.77ï¼
+- JSONã®ã¿ãã³ã¼ããã­ãã¯ãä¸è¦`
             }
           ]
         }]
@@ -114,25 +114,25 @@ export default async function handler(req, res) {
     });
 
     const claudeData = await claudeRes.json();
-    if (!claudeData.content?.[0]?.text) throw new Error('Claude APIからの応答が不正です');
+    if (!claudeData.content?.[0]?.text) throw new Error('Claude APIããã®å¿ç­ãä¸æ­£ã§ã');
 
     const responseText = claudeData.content[0].text.trim();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error(`JSONが見つかりません: ${responseText}`);
+    if (!jsonMatch) throw new Error(`JSONãè¦ã¤ããã¾ãã: ${responseText}`);
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // バリデーション
+    // ããªãã¼ã·ã§ã³
     if (!parsed.trade_date || typeof parsed.settlements !== 'number') {
-      throw new Error('データの解析に失敗しました');
+      throw new Error('ãã¼ã¿ã®è§£æã«å¤±æãã¾ãã');
     }
 
-    // 勝率計算
+    // åçè¨ç®
     const winRate = parsed.settlements > 0
       ? Math.round((parsed.wins / parsed.settlements) * 1000) / 10
       : 0;
 
-    // スクリーンショットをSupabase Storageにアップロード
+    // ã¹ã¯ãªã¼ã³ã·ã§ãããSupabase Storageã«ã¢ããã­ã¼ã
     let screenshotUrl = null;
     try {
       const uploadRes = await fetch(
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
       console.error('Storage upload error:', e);
     }
 
-    // Supabaseにupsert（同じ日付なら上書き）
+    // Supabaseã«upsertï¼åãæ¥ä»ãªãä¸æ¸ãï¼
     const upsertRes = await fetch(
       `${SUPABASE_URL}/rest/v1/daily_records`,
       {
@@ -178,27 +178,27 @@ export default async function handler(req, res) {
 
     if (!upsertRes.ok) {
       const err = await upsertRes.text();
-      throw new Error(`Supabase保存エラー: ${err}`);
+      throw new Error(`Supabaseä¿å­ã¨ã©ã¼: ${err}`);
     }
 
-    // 成功メッセージ
+    // æåã¡ãã»ã¼ã¸
     const sign = parsed.pnl >= 0 ? '+' : '';
     const pnlFormatted = Math.abs(parsed.pnl).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
-    const pnlStr = `${sign}¥${parsed.pnl < 0 ? '-' : ''}${pnlFormatted}`;
+    const pnlStr = `${sign}Â¥${parsed.pnl < 0 ? '-' : ''}${pnlFormatted}`;
 
     await sendMessage(chatId,
-      `✅ <b>${parsed.trade_date} の記録完了！</b>\n\n` +
-      `📊 決済回数: <b>${parsed.settlements}回</b>\n` +
-      `🟢 勝ち: <b>${parsed.wins}回</b>\n` +
-      `🔴 負け: <b>${parsed.losses}回</b>\n` +
-      `📈 勝率: <b>${winRate}%</b>\n` +
-      `💴 損益: <b>${sign}¥${pnlFormatted}</b>`
+      `â <b>${parsed.trade_date} ã®è¨é²å®äºï¼</b>\n\n` +
+      `ð æ±ºæ¸åæ°: <b>${parsed.settlements}å</b>\n` +
+      `ð¢ åã¡: <b>${parsed.wins}å</b>\n` +
+      `ð´ è² ã: <b>${parsed.losses}å</b>\n` +
+      `ð åç: <b>${winRate}%</b>\n` +
+      `ð´ æç: <b>${sign}Â¥${pnlFormatted}</b>`
     );
 
   } catch (error) {
     console.error('Error:', error);
     await sendMessage(chatId,
-      `❌ エラーが発生しました\n${error.message}\n\nもう一度送ってください。`
+      `â ã¨ã©ã¼ãçºçãã¾ãã\n${error.message}\n\nããä¸åº¦éã£ã¦ãã ããã`
     );
   }
 
@@ -229,8 +229,8 @@ async function getRecordCount() {
       }
     );
     const countHeader = res.headers.get('content-range');
-    return countHeader ? countHeader.split('/')[1] : '不明';
+    return countHeader ? countHeader.split('/')[1] : 'ä¸æ';
   } catch {
-    return '不明';
+    return 'ä¸æ';
   }
 }
