@@ -258,7 +258,31 @@
       .period-label { min-width: 120px; font-size: 13px; }
       .trades-grid { grid-template-columns: 1fr; }
     }
-  </style>
+    /* ---- Date group headers ---- */
+    .date-group-header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 2px 8px;
+      margin-top: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .date-group-header:first-child { margin-top: 0; }
+    .date-group-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #a0aec0;
+      letter-spacing: 0.06em;
+    }
+    .date-group-count {
+      font-size: 0.72rem;
+      color: #718096;
+      background: rgba(255,255,255,0.06);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }  
+</style>
 </head>
 <body>
 
@@ -478,20 +502,23 @@ async function loadTotal() {
   document.getElementById('s-total').textContent = (count || 0) + '回';
 }
 
-function renderGrid(trades) {
-  const grid = document.getElementById('grid');
-  if (!trades.length) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📷</div>
-        <div class="empty-title">この期間の取引記録はありません</div>
-        <div class="empty-sub">Telegramボットにスクリーンショットを送信してください</div>
-      </div>`;
-    return;
+  // ---- Date grouping helpers ----
+  function getGroupKey(t, p) {
+    const d = new Date(t.trade_date);
+    if (p === 'year') return d.getFullYear() + '-' + d.getMonth();
+    return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
   }
-
-  grid.innerHTML = '';
-  trades.forEach((t, i) => {
+  function getGroupLabel(key, p) {
+    const parts = key.split('-').map(Number);
+    if (p === 'year') {
+      const d = new Date(parts[0], parts[1], 1);
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' });
+    }
+    const d = new Date(parts[0], parts[1], parts[2]);
+    const days = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
+    return d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' }) + '\uff08' + days[d.getDay()] + '\uff09';
+  }
+  function createCard(t, i, total) {
     const d = new Date(t.trade_date);
     const pc = pnlClass(t.profit_loss);
     const card = document.createElement('div');
@@ -499,24 +526,53 @@ function renderGrid(trades) {
     card.onclick = () => openLb(i);
     card.innerHTML = `
       <div class="trade-img-wrap">
-        ${t.image_url
-          ? `<img class="trade-img" src="${esc(t.image_url)}" alt="取引エビデンス" loading="lazy">`
-          : `<div class="trade-img-placeholder">📷</div>`}
-        <div class="trade-num-badge">#${trades.length - i}</div>
+        ${t.image_url ? `<img class="trade-img" src="${esc(t.image_url)}" alt="\u53d6\u5f15\u30c1\u30e3\u30fc\u30c8" loading="lazy">` : `<div class="trade-img-placeholder">\ud83d\udcf7</div>`}
+        <div class="trade-num-badge">#${total - i}</div>
       </div>
       <div class="trade-info">
         <div class="trade-row1">
-          <span class="trade-pair ${t.currency_pair ? '' : 'empty'}">${t.currency_pair || '通貨ペア未設定'}</span>
+          <span class="trade-pair ${t.currency_pair ? '' : 'empty'}">${t.currency_pair || '\u901a\u8ca8\u30da\u30a2\u672a\u8a2d\u5b9a'}</span>
           ${t.profit_loss ? `<span class="pnl-badge ${pc}">${esc(t.profit_loss)}</span>` : ''}
         </div>
         <div class="trade-date">${d.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
         ${t.caption ? `<div class="trade-caption">${esc(t.caption)}</div>` : ''}
       </div>`;
-    grid.appendChild(card);
-  });
-}
-
-// ---- Lightbox ----
+    return card;
+  }
+  function renderGrid(trades) {
+    const grid = document.getElementById('grid');
+    if (!trades.length) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">\ud83d\udcf7</div>
+          <div class="empty-title">\u3053\u306e\u671f\u9593\u306e\u53d6\u5f15\u8a18\u9332\u306f\u3042\u308a\u307e\u305b\u3093</div>
+          <div class="empty-sub">Telegram\u30dc\u30c3\u30c8\u306b\u30b9\u30af\u30ea\u30fc\u30f3\u30b7\u30e7\u30c3\u30c8\u3092\u9001\u4fe1\u3057\u3066\u304f\u3060\u3055\u3044</div>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    if (period === 'day') {
+      trades.forEach((t, i) => grid.appendChild(createCard(t, i, trades.length)));
+      return;
+    }
+    const groups = [];
+    const keyMap = {};
+    trades.forEach((t, i) => {
+      const key = getGroupKey(t, period);
+      if (!keyMap[key]) {
+        keyMap[key] = { label: getGroupLabel(key, period), trades: [] };
+        groups.push(keyMap[key]);
+      }
+      keyMap[key].trades.push({ t, i });
+    });
+    groups.forEach(g => {
+      const header = document.createElement('div');
+      header.className = 'date-group-header';
+      header.innerHTML = `<span class="date-group-label">${g.label}</span><span class="date-group-count">${g.trades.length}\u4ef6</span>`;
+      grid.appendChild(header);
+      g.trades.forEach(({ t, i }) => grid.appendChild(createCard(t, i, trades.length)));
+    });
+  }
 function openLb(idx) {
   lbIndex = idx;
   showLb(allTrades[idx]);
