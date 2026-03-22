@@ -1,0 +1,9 @@
+{
+  "name": "fx-evidence-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FX取引エビデンス公開サイト (Telegram → Supabase → Vercel)",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
