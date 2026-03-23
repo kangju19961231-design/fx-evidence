@@ -375,7 +375,7 @@ function renderTotalStats() {
 
   const sign = tot.pnl >= 0 ? '+' : '';
   const pnlEl = document.getElementById('t-pnl');
-  pnlEl.innerHTML = `${sign}¥${Math.abs(tot.pnl).toLocaleString('ja-JP', {maximumFractionDigits:2})}`;
+  pnlEl.innerHTML = `${sign}$${Math.abs(tot.pnl).toLocaleString('en-US', {maximumFractionDigits:2})}`;
   pnlEl.className = 'value ' + (tot.pnl >= 0 ? 'val-green' : 'val-red');
 }
 
@@ -454,7 +454,7 @@ function renderMonthly(container) {
   const sorted = Object.entries(months).sort((a,b) => b[0].localeCompare(a[0]));
   const rows = sorted.map(([key, records]) => {
     const [y, m] = key.split('-');
-    const label = `${y}�t${parseInt(m)}月`;
+    const label = `${y}年${parseInt(m)}月`;
     return periodRow(key, label, records, false);
   });
   container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
@@ -480,7 +480,7 @@ function periodRow(key, label, records, isDay) {
     ? (agg.wins / agg.settlements * 100).toFixed(1)
     : 0;
   const sign = agg.pnl >= 0 ? '+' : '';
-  const pnlStr = `${sign}¥${Math.abs(agg.pnl).toLocaleString('ja-JP', {maximumFractionDigits:2})}`;
+  const pnlStr = `${sign}$${Math.abs(agg.pnl).toLocaleString('en-US', {maximumFractionDigits:]})}`;
   const pnlClass = agg.pnl >= 0 ? 'val-green' : 'val-red';
 
   let detail = '';
@@ -511,7 +511,7 @@ function periodRow(key, label, records, isDay) {
               <span class="r">負${r.losses}</span>
               <span>勝率 ${r.settlements>0?(r.wins/r.settlements*100).toFixed(1):0}%</span>
             </div>
-            <div class="sub-day-pnl ${sc}">${sp}¥${Math.abs(r.pnl).toLocaleString('ja-JP',{maximumFractionDigits:2})}</div>
+            <div class="sub-day-pnl ${sc}">${sp}$${Math.abs(r.pnl).toLocaleString('en-US',{maximumFractionDigits:2})}</div>
           </div>`;
       }).join('');
     detail = `<div class="sub-days">${subDays}</div>`;
