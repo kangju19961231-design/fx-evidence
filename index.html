@@ -480,7 +480,7 @@ function periodRow(key, label, records, isDay) {
     ? (agg.wins / agg.settlements * 100).toFixed(1)
     : 0;
   const sign = agg.pnl >= 0 ? '+' : '';
-  const pnlStr = `${sign}$${Math.abs(agg.pnl).toLocaleString('en-US', {maximumFractionDigits:]})}`;
+  const pnlStr = `${sign}$${Math.abs(agg.pnl).toLocaleString('en-US', {maximumFractionDigits:2})}`;
   const pnlClass = agg.pnl >= 0 ? 'val-green' : 'val-red';
 
   let detail = '';
