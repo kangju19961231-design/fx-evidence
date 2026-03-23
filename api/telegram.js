@@ -216,6 +216,17 @@ async function sendMessage(chatId, text) {
   );
 }
 
+async function sendMessagePlain(chatId, text) {
+  return fetch(
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text })
+    }
+  );
+}
+
 async function getRecordCount() {
   try {
     const res = await fetch(
