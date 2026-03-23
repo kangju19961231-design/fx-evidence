@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         '📸 <b>FX Evidence Bot</b>\n\n' +
         'MT5の約定履歴（約定タブ）のスクリーンショットを、<b>日付をキャプションに付けて</b>送ってください。\n\n' +
         '例：スクリーンショットのキャプションに「2026/03/20」と入力して送信\n\n' +
-        '同じ日付を複数枚送ると自動で合算されます。'
+        '1日分が1枚に収まらない場合は、同じ日付で複数枚送ってください。重複する取引は自動で除外されます。'
       );
     } else if (message.text === '/status') {
       const count = await getRecordCount();
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     const imageBuffer = await imageRes.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
 
-    // Claude APIで画像解析（日付はキャプションから取得済みのため不要）
+    // Claude APIで画像解析 — 取引ごとの詳細を抽出（重複排除のため）
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [{
           role: 'user',
           content: [
@@ -132,20 +132,19 @@ export default async function handler(req, res) {
               text: `このMT5の約定履歴（約定タブ）スクリーンショットを解析して、以下のJSONのみ返してください。説明文は不要です。
 
 {
-  "settlements": <決済回数>,
-  "wins": <勝ち数>,
-  "losses": <負け数>,
-  "pnl": <損益合計>
+  "pnl": <画面最上部の「損益:」欄の数値>,
+  "trades": [
+    {"time": "HH:MM:SS", "pnl": <その取引のP&L>, "win": true},
+    ...
+  ]
 }
 
 ルール：
 - 取引リストの各行を1行ずつ確認する
-- "out"と書かれた決済行のみカウント（"in"のエントリー行は除外）
+- "out"と書かれた決済行のみ抽出（"in"のエントリー行は除外）
 - "commission"（手数料）の行は除外
-- 各行の右端の数値がその取引のP&L
-  - P&Lがプラス（正の数）→ wins にカウント
-  - P&Lがマイナス（負の数）→ losses にカウント
-- settlements = wins + losses
+- timeは各行の時刻（例: "13:14:31"）を正確に読む
+- 各行の右端の数値がP&L：プラスならwin:true、マイナスならwin:false
 - pnlは画面最上部の「損益:」欄の数値をそのまま読む（スペース除去、例: "1 941.44" → 1941.44）
 - JSONのみ返す、コードブロック不要`
             }
@@ -167,8 +166,8 @@ export default async function handler(req, res) {
     const parsed = JSON.parse(jsonMatch[0]);
 
     // バリデーション
-    if (typeof parsed.settlements !== 'number') {
-      throw new Error('データの解析に失敗しました');
+    if (!Array.isArray(parsed.trades)) {
+      throw new Error('データの解析に失敗しました（tradesが配列ではありません）');
     }
 
     // 同日の既存レコードを取得（複数枚スクリーンショット対応）
@@ -184,19 +183,30 @@ export default async function handler(req, res) {
     const existingData = await existingRes.json();
     const existing = Array.isArray(existingData) ? existingData[0] : null;
 
-    // 既存レコードがある場合は加算、なければそのまま
-    let finalSettlements, finalWins, finalLosses, finalPnl;
-    if (existing) {
-      finalSettlements = existing.settlements + parsed.settlements;
-      finalWins = existing.wins + parsed.wins;
-      finalLosses = existing.losses + parsed.losses;
-      finalPnl = Math.round((existing.pnl + parsed.pnl) * 100) / 100;
+    // 取引を時刻でマージ＆重複排除
+    let mergedTrades;
+    if (existing && Array.isArray(existing.trades) && existing.trades.length > 0) {
+      // 既存の取引 + 新しい取引を時刻キーでマージ（重複排除）
+      const tradeMap = new Map();
+      for (const t of existing.trades) {
+        tradeMap.set(t.time, t);
+      }
+      for (const t of parsed.trades) {
+        tradeMap.set(t.time, t); // 同じ時刻は上書き（最新スクリーンショット優先）
+      }
+    2 mergedTrades = Array.from(tradeMap.values());
     } else {
-      finalSettlements = parsed.settlements;
-      finalWins = parsed.wins;
-      finalLosses = parsed.losses;
-      finalPnl = parsed.pnl;
+      mergedTrades = parsed.trades;
     }
+
+    // マージ後の合計を計算
+    const finalSettlements = mergedTrades.length;
+    const finalWins = mergedTrades.filter(t => t.win === true).length;
+    const finalLosses = mergedTrades.filter(t => t.win === false).length;
+
+    // 損益は画面ヘッダーの値を使用（MT5のヘッダーは全取引の合計を表示）
+    // 複数枚ある場合は新しいスクリーンショットのヘッダー値を優先
+    const finalPnl = Math.round((parsed.pnl ?? (existing?.pnl ?? 0)) * 100) / 100;
 
     // 勝率計算
     const winRate = finalSettlements > 0
@@ -204,7 +214,7 @@ export default async function handler(req, res) {
       : 0;
 
     // スクリーンショットをSupabase Storageにアップロード
-    let screenshotUrl = null;
+    let screenshotUrl = existing?.screenshot_url ?? null;
     try {
       const uploadRes = await fetch(
         `${SUPABASE_URL}/storage/v1/object/screenshots/${tradeDate}.jpg`,
@@ -242,6 +252,7 @@ export default async function handler(req, res) {
           wins: finalWins,
           losses: finalLosses,
           pnl: finalPnl,
+          trades: mergedTrades,
           screenshot_url: screenshotUrl
         })
       }
@@ -258,7 +269,7 @@ export default async function handler(req, res) {
     const pnlFormatted = Math.abs(finalPnl).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
 
     await sendMessage(chatId,
-      `✅ <b>${tradeDate} の記録${isAdditional ? '追加' : '完了'}！</b>${isAdditional ? '（合計）' : ''}\n\n` +
+      `✅ <b>${tradeDate} の記録${isAdditional ? '更新' : '完了'}！</b>${isAdditional ? '（重複排除済み）' : ''}\n\n` +
       `📊 決済回数: <b>${finalSettlements}回</b>\n` +
       `🟢 勝ち: <b>${finalWins}回</b>\n` +
       `🔴 負け: <b>${finalLosses}回</b>\n` +
