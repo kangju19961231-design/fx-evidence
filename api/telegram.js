@@ -97,13 +97,14 @@ export default async function handler(req, res) {
 {
   "trade_date": "YYYY-MM-DD",
   "settlements": <決済回数（"out"の取引数）>,
-  "wins": <勝ち数（プラスはP&L取引数）>,
+  "wins": <勝ち数（プラスのP&L取引数）>,
   "losses": <負け数（マイナスのP&L取引数）>,
   "pnl": <損益合計（画面上部の「損益:」の数値、スペースなしの数値）>
 }
 
 ルール：
 - "out"（決済・クローズ）の取引のみカウント、"in"（エントリー）は除く
+- "commission"（コミッション・手数料）の行は勝ち・負けのどちらにもカウントしない（settlementsにも含めない）
 - trade_dateは画面内の取引日付（例: "2026.03.09" → "2026-03-09"）
 - pnlは損益欄の数値をそのまま（例: "1 467.77" → 1467.77）
 - JSONのみ、コードブロックも不要`
@@ -130,9 +131,36 @@ export default async function handler(req, res) {
       throw new Error('データの解析に失敗しました');
     }
 
+    // 同日の既存レコードを取得（複数枚スクリーンショット対応）
+    const existingRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/daily_records?trade_date=eq.${parsed.trade_date}&select=*`,
+      {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+          'apikey': SUPABASE_SERVICE_KEY
+        }
+      }
+    );
+    const existingData = await existingRes.json();
+    const existing = Array.isArray(existingData) ? existingData[0] : null;
+
+    // 既存レコードがある場合は加算、なければそのまま
+    let finalSettlements, finalWins, finalLosses, finalPnl;
+    if (existing) {
+      finalSettlements = existing.settlements + parsed.settlements;
+      finalWins = existing.wins + parsed.wins;
+      finalLosses = existing.losses + parsed.losses;
+      finalPnl = Math.round((existing.pnl + parsed.pnl) * 100) / 100;
+    } else {
+      finalSettlements = parsed.settlements;
+      finalWins = parsed.wins;
+      finalLosses = parsed.losses;
+      finalPnl = parsed.pnl;
+    }
+
     // 勝率計算
-    const winRate = parsed.settlements > 0
-      ? Math.round((parsed.wins / parsed.settlements) * 1000) / 10
+    const winRate = finalSettlements > 0
+      ? Math.round((finalWins / finalSettlements) * 1000) / 10
       : 0;
 
     // スクリーンショットをSupabase Storageにアップロード
@@ -157,7 +185,7 @@ export default async function handler(req, res) {
       console.error('Storage upload error:', e);
     }
 
-    // Supabaseにupsert（同じ日付なら上書き）
+    // Supabaseにupsert（同じ日付なら加算済み値で上書き）
     const upsertRes = await fetch(
       `${SUPABASE_URL}/rest/v1/daily_records`,
       {
@@ -170,10 +198,10 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           trade_date: parsed.trade_date,
-          settlements: parsed.settlements,
-          wins: parsed.wins,
-          losses: parsed.losses,
-          pnl: parsed.pnl,
+          settlements: finalSettlements,
+          wins: finalWins,
+          losses: finalLosses,
+          pnl: finalPnl,
           screenshot_url: screenshotUrl
         })
       }
@@ -184,16 +212,17 @@ export default async function handler(req, res) {
       throw new Error(`Supabase保存エラー: ${err}`);
     }
 
-    // 成功メッセージ
-    const sign = parsed.pnl >= 0 ? '+' : '';
-    const pnlFormatted = Math.abs(parsed.pnl).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
-    const pnlStr = `${sign}¥${parsed.pnl < 0 ? '-' : ''}${pnlFormatted}`;
+    // 成功メッセージ（2枚目以降は合計値を表示）
+    const isAdditional = !!existing;
+    const sign = finalPnl >= 0 ? '+' : '';
+    const pnlFormatted = Math.abs(finalPnl).toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+    const pnlStr = `${sign}¥${pnlFormatted}`;
 
     await sendMessage(chatId,
-      `✅ <b>${parsed.trade_date} の記録完了！</b>\n\n` +
-      `📊 決済回数: <b>${parsed.settlements}回</b>\n` +
-      `🟢 勝ち: <b>${parsed.wins}回</b>\n` +
-      `🔴 負け: <b>${parsed.losses}回</b>\n` +
+      `✅ <b>${parsed.trade_date} の記録${isAdditional ? '追加' : '完了'}！</b>${isAdditional ? '（合計）' : ''}\n\n` +
+      `📊 決済回数: <b>${finalSettlements}回</b>\n` +
+      `🟢 勝ち: <b>${finalWins}回</b>\n` +
+      `🔴 負け: <b>${finalLosses}回</b>\n` +
       `📈 勝率: <b>${winRate}%</b>\n` +
       `💴 損益: <b>${sign}¥${pnlFormatted}</b>`
     );
