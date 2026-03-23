@@ -235,8 +235,18 @@ export default async function handler(req, res) {
       console.error('Storage upload error:', e);
     }
 
-    // Supabaseにupsert
-    const upsertRes = await fetch(
+    // Supabaseにupsert（tradesカラムなしでもフォールバック）
+    const upsertPayload = (includeTrades) => JSON.stringify({
+      trade_date: tradeDate,
+      settlements: finalSettlements,
+      wins: finalWins,
+      losses: finalLosses,
+      pnl: finalPnl,
+      ...(includeTrades ? { trades: mergedTrades } : {}),
+      screenshot_url: screenshotUrl
+    });
+
+    let upsertRes = await fetch(
       `${SUPABASE_URL}/rest/v1/daily_records`,
       {
         method: 'POST',
@@ -246,21 +256,35 @@ export default async function handler(req, res) {
           'apikey': SUPABASE_SERVICE_KEY,
           'Prefer': 'resolution=merge-duplicates'
         },
-        body: JSON.stringify({
-          trade_date: tradeDate,
-          settlements: finalSettlements,
-          wins: finalWins,
-          losses: finalLosses,
-          pnl: finalPnl,
-          trades: mergedTrades,
-          screenshot_url: screenshotUrl
-        })
+        body: upsertPayload(true)
       }
     );
 
+    // tradesカラムが未作成の場合はカラムなしで再試行
     if (!upsertRes.ok) {
-      const err = await upsertRes.text();
-      throw new Error(`Supabase保存エラー: ${err}`);
+      const errText = await upsertRes.text();
+      if (errText.includes('"trades"') || errText.includes("'trades'") || errText.includes('PGRST204')) {
+        console.warn('trades column missing, retrying without it');
+        upsertRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/daily_records`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+              'apikey': SUPABASE_SERVICE_KEY,
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: upsertPayload(false)
+          }
+        );
+        if (!upsertRes.ok) {
+          const err2 = await upsertRes.text();
+          throw new Error(`Supabase保存エラー: ${err2}`);
+        }
+      } else {
+        throw new Error(`Supabase保存エラー: ${errText}`);
+      }
     }
 
     // 成功メッセージ
