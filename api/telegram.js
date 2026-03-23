@@ -10,7 +10,7 @@ const ALLOWED_CHAT_ID = parseInt(process.env.TELEGRAM_ALLOWED_CHAT_ID || '0');
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 // キャプションから日付を解析 (例: "2026/03/20", "2026-03-20", "3/20", "03/20")
-function parseDateFromCaption(caption) 
+function parseDateFromCaption(caption) {
   if (!caption) return null;
   const text = caption.trim();
 
