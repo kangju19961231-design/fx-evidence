@@ -9,33 +9,39 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0f14;
-      --card: #161a24;
-      --card2: #1e2330;
-      --border: #2a2f3d;
-      --text: #e8eaf0;
-      --muted: #6b7280;
-      --green: #22c55e;
-      --green-dim: #16a34a22;
-      --red: #ef4444;
-      --red-dim: #dc262622;
-      --blue: #3b82f6;
-      --accent: #6366f1;
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --border-light: #f0f0f2;
+      --text: #111827;
+      --muted: #9ca3af;
+      --sub: #6b7280;
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --blue: #2563eb;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* ── Header ── */
     header {
-      background: var(--card);
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 0 24px;
-      height: 56px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -43,197 +49,353 @@
       top: 0;
       z-index: 100;
     }
+
     .logo {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-    .header-sub { font-size: 12px; color: var(--muted); }
+
+    .logo-mark {
+      width: 24px;
+      height: 24px;
+      background: var(--text);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .header-badge {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-weight: 500;
+    }
 
     /* ── Main ── */
-    main { max-width: 900px; margin: 0 auto; padding: 28px 16px 80px; }
-
-    /* ── All-time stats ── */
-    .stats-section { margin-bottom: 28px; }
-    .stats-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 12px;
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 16px 80px;
     }
+
+    /* ── 証拠金 Banner ── */
+    .margin-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .margin-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .margin-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .margin-value .unit {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sub);
+      margin-left: 2px;
+    }
+
+    .margin-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Stats Grid ── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 10px;
+      margin-bottom: 24px;
     }
+
     @media (max-width: 640px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .stats-grid .stat-pnl { grid-column: 1 / -1; }
     }
+
     .stat-card {
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
     }
-    .stat-card .label {
+
+    .stat-card .s-label {
       font-size: 11px;
+      font-weight: 600;
       color: var(--muted);
+      letter-spacing: 0.3px;
       margin-bottom: 8px;
     }
-    .stat-card .value {
-      font-size: 26px;
+
+    .stat-card .s-value {
+      font-size: 24px;
       font-weight: 700;
+      color: var(--text);
       line-height: 1;
+      letter-spacing: -0.5px;
     }
-    .stat-card .unit {
-      font-size: 13px;
-      font-weight: 400;
+
+    .stat-card .s-value .unit {
+      font-size: 12px;
+      font-weight: 500;
       color: var(--muted);
-      margin-left: 3px;
+      margin-left: 2px;
     }
-    .stat-pnl { background: var(--card2); }
-    .stat-pnl .value { font-size: 30px; }
-    .val-green { color: var(--green); }
-    .val-red { color: var(--red); }
-    .val-white { color: var(--text); }
+
+    .stat-pnl .s-value { font-size: 26px; }
+    .val-green { color: var(--green) !important; }
+    .val-red { color: var(--red) !important; }
 
     /* ── Tabs ── */
+    .tabs-wrap {
+      margin-bottom: 16px;
+    }
+
     .tabs-bar {
       display: flex;
-      gap: 4px;
-      background: var(--card);
+      gap: 2px;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 4px;
-      margin-bottom: 20px;
       width: fit-content;
+      box-shadow: var(--shadow);
     }
+
     .tab-btn {
-      padding: 7px 20px;
+      padding: 6px 18px;
       border-radius: 7px;
       border: none;
       background: transparent;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 500;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn:hover { color: var(--text); background: var(--bg); }
+
     .tab-btn.active {
-      background: var(--accent);
+      background: var(--text);
       color: #fff;
     }
 
-    /* ── Period list ── */
-    .period-list { display: flex; flex-direction: column; gap: 8px; }
+    /* ── Period List ── */
+    .period-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
     .period-row {
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .period-row:hover { border-color: var(--accent); }
-    .period-row.open { border-color: var(--accent); }
+
+    .period-row:hover {
+      border-color: #d1d5db;
+      box-shadow: var(--shadow-md);
+    }
+
+    .period-row.open {
+      border-color: #d1d5db;
+      box-shadow: var(--shadow-md);
+    }
 
     .period-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      padding: 16px 20px;
       flex-wrap: wrap;
     }
-    .period-date {
-      font-size: 15px;
-      font-weight: 600;
+
+    .period-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      min-width: 0;
     }
+
+    .period-date {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
     .period-mini-stats {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    .mini-stat {
+
+    .mini-pill {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border-light);
+      color: var(--sub);
+      background: var(--bg);
+    }
+
+    .mini-pill.win { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+    .mini-pill.lose { color: var(--red); background: var(--red-bg); border-color: #fecaca; }
+
+    .period-right {
       display: flex;
       align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      color: var(--muted);
+      gap: 10px;
+      flex-shrink: 0;
     }
-    .mini-stat strong { font-size: 14px; color: var(--text); }
-    .mini-stat .g { color: var(--green); }
-    .mini-stat .r { color: var(--red); }
 
     .period-pnl {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
-      min-width: 100px;
+      min-width: 90px;
       text-align: right;
     }
 
-    /* ── Detail (screenshot + day breakdown) ── */
-    .period-detail { display: none; margin-top: 16px; }
+    .expand-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .period-row.open .expand-icon { transform: rotate(180deg); }
+
+    /* ── Detail ── */
+    .period-detail {
+      display: none;
+      border-top: 1px solid var(--border-light);
+    }
+
     .period-row.open .period-detail { display: block; }
+
+    .detail-inner {
+      padding: 16px 20px;
+    }
 
     .detail-screenshot {
       width: 100%;
-      max-height: 500px;
+      max-height: 480px;
       object-fit: contain;
       border-radius: 8px;
-      background: #000;
-    }
-    .detail-no-img {
-      text-align: center;
-      padding: 24px;
-      color: var(--muted);
-      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: zoom-in;
     }
 
-    /* days inside week/month/year */
-    .sub-days { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .sub-day {
-      background: var(--card2);
+    .detail-no-img {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 13px;
+      background: var(--bg);
       border-radius: 8px;
-      padding: 10px 14px;
+      border: 1px dashed var(--border);
+    }
+
+    /* sub-day rows */
+    .sub-days { display: flex; flex-direction: column; gap: 4px; }
+
+    .sub-day {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 11px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
       cursor: pointer;
+      transition: background 0.1s;
     }
-    .sub-day:hover { background: #23283a; }
-    .sub-day-date { font-size: 13px; color: var(--text); font-weight: 500; }
-    .sub-day-stats { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
-    .sub-day-pnl { font-size: 14px; font-weight: 600; }
 
-    /* ── Loading / empty ── */
+    .sub-day:hover { background: #eef0f3; }
+
+    .sub-day-date { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    .sub-day-pills {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .sub-day-pnl { font-size: 13px; font-weight: 700; }
+
+    /* ── Loading / Empty ── */
     .loading {
       text-align: center;
       padding: 60px 0;
       color: var(--muted);
-      font-size: 15px;
+      font-size: 14px;
     }
+
     .spinner {
       display: inline-block;
-      width: 24px;
-      height: 24px;
+      width: 22px; height: 22px;
       border: 2px solid var(--border);
-      border-top-color: var(--accent);
+      border-top-color: var(--text);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .empty {
@@ -241,84 +403,121 @@
       padding: 60px 0;
       color: var(--muted);
     }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-text { font-size: 15px; }
 
-    /* ── Image modal ── */
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-text { font-size: 14px; line-height: 1.6; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* ── Image Modal ── */
     #modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
       z-index: 999;
       align-items: center;
       justify-content: center;
     }
+
     #modal.open { display: flex; }
+
     #modal img {
-      max-width: 95vw;
-      max-height: 95vh;
-      border-radius: 8px;
+      max-width: 92vw;
+      max-height: 92vh;
+      border-radius: 10px;
       object-fit: contain;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4);
     }
+
     #modal-close {
       position: absolute;
       top: 16px;
       right: 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
       border-radius: 8px;
       padding: 8px 16px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 500;
     }
+
+    #modal-close:hover { background: rgba(255,255,255,0.25); }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <div class="logo-dot"></div>
+    <div class="logo-mark">FX</div>
     FX Evidence
   </div>
-  <div class="header-sub">第三者確認・公開記録</div>
+  <div class="header-badge">第三者確認・公開記録</div>
 </header>
 
 <main>
-  <!-- All-time stats -->
-  <div class="stats-section">
-    <div class="stats-label">累計パフォーマンス</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="label">決済回数</div>
-        <div class="value" id="t-settlements">—<span class="unit">回</span></div>
+
+  <!-- 証拠金 -->
+  <div class="margin-banner">
+    <div>
+      <div class="margin-label">証拠金</div>
+      <div class="margin-value" id="margin-display">
+        <span id="margin-amount">—</span>
+        <span class="unit">$</span>
       </div>
-      <div class="stat-card">
-        <div class="label">勝ち数</div>
-        <div class="value val-green" id="t-wins">—<span class="unit">回</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">負け数</div>
-        <div class="value val-red" id="t-losses">—<span class="unit">回</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">勝率</div>
-        <div class="value" id="t-winrate">—<span class="unit">%</span></div>
-      </div>
-      <div class="stat-card stat-pnl">
-        <div class="label">累計損益</div>
-        <div class="value" id="t-pnl">—</div>
-      </div>
+      <div class="margin-note">初回入金額</div>
+    </div>
+    <div style="text-align:right">
+      <div class="margin-label">運用期間</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text)" id="period-display">—</div>
+    </div>
+  </div>
+
+  <!-- 累計パフォーマンス -->
+  <div class="section-label">累計パフォーマンス</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="s-label">決済回数</div>
+      <div class="s-value" id="t-settlements">—<span class="unit">回</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">勝ち</div>
+      <div class="s-value val-green" id="t-wins">—<span class="unit">回</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">負け</div>
+      <div class="s-value val-red" id="t-losses">—<span class="unit">回</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">勝率</div>
+      <div class="s-value" id="t-winrate">—<span class="unit">%</span></div>
+    </div>
+    <div class="stat-card stat-pnl">
+      <div class="s-label">累計損益</div>
+      <div class="s-value" id="t-pnl">—</div>
     </div>
   </div>
 
   <!-- Tabs -->
-  <div class="tabs-bar">
-    <button class="tab-btn active" data-tab="daily">日別</button>
-    <button class="tab-btn" data-tab="weekly">週別</button>
-    <button class="tab-btn" data-tab="monthly">月別</button>
-    <button class="tab-btn" data-tab="yearly">年別</button>
+  <div class="tabs-wrap">
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab="daily">日別</button>
+      <button class="tab-btn" data-tab="weekly">週別</button>
+      <button class="tab-btn" data-tab="monthly">月別</button>
+      <button class="tab-btn" data-tab="yearly">年別</button>
+    </div>
   </div>
 
   <!-- Content -->
@@ -327,6 +526,7 @@
       <div class="spinner"></div><br>読み込み中...
     </div>
   </div>
+
 </main>
 
 <!-- Image modal -->
@@ -336,270 +536,286 @@
 </div>
 
 <script>
-const SUPABASE_URL  = 'https://yeragkyletzjbyvztfxu.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_BHDVWDMPgdBMVKMx7XlifA_vjzYmsMe';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const SUPABASE_URL  = 'https://yeragkyletzjbyvztfxu.supabase.co';
+  const SUPABASE_KEY  = 'sb_publishable_BHDVWDMPgdBMVKMx7XlifA_vjzYmsMe';
+  const INITIAL_MARGIN = null; // 後で設定
 
-let allRecords = [];
-let currentTab = 'daily';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let allRecords = [];
+  let currentTab = 'daily';
 
-// ── Init ──────────────────────────────────────────────
-async function init() {
-  const { data, error } = await sb
-    .from('daily_records')
-    .select('*')
-    .order('trade_date', { ascending: false });
-
-  if (error) {
-    document.getElementById('content').innerHTML =
-      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">データの読み込みに失敗しました</div></div>`;
-    return;
-  }
-
-  allRecords = data || [];
-  renderTotalStats();
-  renderTab('daily');
-}
-
-// ── Total stats ───────────────────────────────────────
-function renderTotalStats() {
-  const tot = aggregate(allRecords);
-  const wr = tot.settlements > 0
-    ? (tot.wins / tot.settlements * 100).toFixed(1)
-    : 0;
-
-  setText('t-settlements', fmt(tot.settlements, '回'));
-  setText('t-wins', fmt(tot.wins, '回'));
-  setText('t-losses', fmt(tot.losses, '回'));
-  setText('t-winrate', wr + '<span class="unit">%</span>');
-
-  const sign = tot.pnl >= 0 ? '+' : '';
-  const pnlEl = document.getElementById('t-pnl');
-  pnlEl.innerHTML = `${sign}$${Math.abs(tot.pnl).toLocaleString('en-US', {maximumFractionDigits:2})}`;
-  pnlEl.className = 'value ' + (tot.pnl >= 0 ? 'val-green' : 'val-red');
-}
-
-function setText(id, html) {
-  document.getElementById(id).innerHTML = html;
-}
-function fmt(n, unit) {
-  return `${n}<span class="unit">${unit}</span>`;
-}
-
-// ── Aggregate helper ──────────────────────────────────
-function aggregate(records) {
-  return records.reduce((acc, r) => ({
-    settlements: acc.settlements + (r.settlements || 0),
-    wins:        acc.wins        + (r.wins        || 0),
-    losses:      acc.losses      + (r.losses      || 0),
-    pnl:         acc.pnl        + (r.pnl         || 0),
-  }), { settlements: 0, wins: 0, losses: 0, pnl: 0 });
-}
-
-// ── Tabs ──────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentTab = btn.dataset.tab;
-    renderTab(currentTab);
-  });
-});
-
-function renderTab(tab) {
-  const content = document.getElementById('content');
-
-  if (allRecords.length === 0) {
-    content.innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">📭</div>
-        <div class="empty-text">まだデータがありません。<br>Telegramからスクリーンショットを送ってください。</div>
-      </div>`;
-    return;
-  }
-
-  if (tab === 'daily')   renderDaily(content);
-  if (tab === 'weekly')  renderWeekly(content);
-  if (tab === 'monthly') renderMonthly(content);
-  if (tab === 'yearly')  renderYearly(content);
-}
-
-// ── Daily ─────────────────────────────────────────────
-function renderDaily(container) {
-  const rows = allRecords.map(r => {
-    const d = parseDate(r.trade_date);
-    const label = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} (${dayName(d)})`;
-    return periodRow(r.trade_date, label, [r], true);
-  });
-  container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
-  bindRows();
-}
-
-// ── Weekly ────────────────────────────────────────────
-function renderWeekly(container) {
-  const weeks = groupBy(allRecords, r => weekKey(r.trade_date));
-  const sorted = Object.entries(weeks).sort((a,b) => b[0].localeCompare(a[0]));
-  const rows = sorted.map(([key, records]) => {
-    const { start, end } = weekRange(key);
-    const label = `${fmtDate(start)} 〜 ${fmtDate(end)}`;
-    return periodRow(key, label, records, false);
-  });
-  container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
-  bindRows();
-}
-
-// ── Monthly ───────────────────────────────────────────
-function renderMonthly(container) {
-  const months = groupBy(allRecords, r => r.trade_date.substring(0, 7));
-  const sorted = Object.entries(months).sort((a,b) => b[0].localeCompare(a[0]));
-  const rows = sorted.map(([key, records]) => {
-    const [y, m] = key.split('-');
-    const label = `${y}年${parseInt(m)}月`;
-    return periodRow(key, label, records, false);
-  });
-  container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
-  bindRows();
-}
-
-// ── Yearly ────────────────────────────────────────────
-function renderYearly(container) {
-  const years = groupBy(allRecords, r => r.trade_date.substring(0, 4));
-  const sorted = Object.entries(years).sort((a,b) => b[0].localeCompare(a[0]));
-  const rows = sorted.map(([key, records]) => {
-    const label = `${key}年`;
-    return periodRow(key, label, records, false);
-  });
-  container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
-  bindRows();
-}
-
-// ── Period row builder ────────────────────────────────
-function periodRow(key, label, records, isDay) {
-  const agg = aggregate(records);
-  const wr = agg.settlements > 0
-    ? (agg.wins / agg.settlements * 100).toFixed(1)
-    : 0;
-  const sign = agg.pnl >= 0 ? '+' : '';
-  const pnlStr = `${sign}$${Math.abs(agg.pnl).toLocaleString('en-US', {maximumFractionDigits:2})}`;
-  const pnlClass = agg.pnl >= 0 ? 'val-green' : 'val-red';
-
-  let detail = '';
-  if (isDay) {
-    const r = records[0];
-    if (r.screenshot_url) {
-      detail = `<img class="detail-screenshot" src="${r.screenshot_url}" alt="取引証拠" onclick="openModal('${r.screenshot_url}')" loading="lazy">`;
-    } else {
-      detail = `<div class="detail-no-img">📸 スクリーンショットなし</div>`;
+  // ── Init ────────────────────────────────────────────────
+  async function init() {
+    // 証拠金表示
+    if (INITIAL_MARGIN !== null) {
+      document.getElementById('margin-amount').textContent =
+        Number(INITIAL_MARGIN).toLocaleString('en-US');
     }
-  } else {
-    // Show sub-days
-    const subDays = records
-      .sort((a,b) => b.trade_date.localeCompare(a.trade_date))
-      .map(r => {
-        const d = parseDate(r.trade_date);
-        const dl = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} (${dayName(d)})`;
-        const sp = r.pnl >= 0 ? '+' : '';
-        const sc = r.pnl >= 0 ? 'val-green' : 'val-red';
-        const imgClick = r.screenshot_url
-          ? `onclick="openModal('${r.screenshot_url}')"` : '';
-        return `
-          <div class="sub-day" ${imgClick}>
-            <div class="sub-day-date">${dl}</div>
-            <div class="sub-day-stats">
-              <span>決済 ${r.settlements}回</span>
-              <span class="g">勝${r.wins}</span>
-              <span class="r">負${r.losses}</span>
-              <span>勝率 ${r.settlements>0?(r.wins/r.settlements*100).toFixed(1):0}%</span>
-            </div>
-            <div class="sub-day-pnl ${sc}">${sp}$${Math.abs(r.pnl).toLocaleString('en-US',{maximumFractionDigits:2})}</div>
-          </div>`;
-      }).join('');
-    detail = `<div class="sub-days">${subDays}</div>`;
+
+    const { data, error } = await sb
+      .from('daily_records')
+      .select('*')
+      .order('trade_date', { ascending: false });
+
+    if (error) {
+      document.getElementById('content').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">データの読み込みに失敗しました</div></div>`;
+      return;
+    }
+
+    allRecords = data || [];
+    renderTotalStats();
+    renderPeriodDisplay();
+    renderTab('daily');
   }
 
-  return `
-    <div class="period-row" data-key="${key}">
-      <div class="period-head">
-        <div class="period-date">${label}</div>
-        <div class="period-mini-stats">
-          <div class="mini-stat">決済 <strong>${agg.settlements}回</strong></div>
-          <div class="mini-stat"><span class="g">勝${agg.wins}</span></div>
-          <div class="mini-stat"><span class="r">負${agg.losses}</span></div>
-          <div class="mini-stat">勝率 <strong>${wr}%</strong></div>
-        </div>
-        <div class="period-pnl ${pnlClass}">${pnlStr}</div>
-      </div>
-      <div class="period-detail">${detail}</div>
-    </div>`;
-}
+  // ── 運用期間 ────────────────────────────────────────────
+  function renderPeriodDisplay() {
+    if (allRecords.length === 0) return;
+    const dates = allRecords.map(r => r.trade_date).sort();
+    const start = dates[0];
+    const end   = dates[dates.length - 1];
+    if (start === end) {
+      document.getElementById('period-display').textContent = fmtShort(start);
+    } else {
+      document.getElementById('period-display').textContent = `${fmtShort(start)} 〜 ${fmtShort(end)}`;
+    }
+  }
 
-function bindRows() {
-  document.querySelectorAll('.period-row').forEach(row => {
-    row.addEventListener('click', (e) => {
-      if (e.target.tagName === 'IMG') return;
-      row.classList.toggle('open');
+  function fmtShort(str) {
+    const [y, m, d] = str.split('-');
+    return `${y}/${m}/${d}`;
+  }
+
+  // ── Total stats ─────────────────────────────────────────
+  function renderTotalStats() {
+    const tot = aggregate(allRecords);
+    const wr  = tot.settlements > 0 ? (tot.wins / tot.settlements * 100).toFixed(1) : 0;
+
+    setHTML('t-settlements', `${tot.settlements}<span class="unit">回</span>`);
+    setHTML('t-wins',        `${tot.wins}<span class="unit">回</span>`);
+    setHTML('t-losses',      `${tot.losses}<span class="unit">回</span>`);
+    setHTML('t-winrate',     `${wr}<span class="unit">%</span>`);
+
+    const sign = tot.pnl >= 0 ? '+' : '';
+    const pnlEl = document.getElementById('t-pnl');
+    pnlEl.innerHTML = `${sign}$${Math.abs(tot.pnl).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    pnlEl.className = 's-value ' + (tot.pnl >= 0 ? 'val-green' : 'val-red');
+  }
+
+  function setHTML(id, html) { document.getElementById(id).innerHTML = html; }
+
+  // ── Aggregate ───────────────────────────────────────────
+  function aggregate(records) {
+    return records.reduce((acc, r) => ({
+      settlements: acc.settlements + (r.settlements || 0),
+      wins:        acc.wins        + (r.wins        || 0),
+      losses:      acc.losses      + (r.losses      || 0),
+      pnl:         acc.pnl         + (r.pnl         || 0),
+    }), { settlements: 0, wins: 0, losses: 0, pnl: 0 });
+  }
+
+  // ── Tabs ────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      renderTab(currentTab);
     });
   });
-}
 
-// ── Utils ─────────────────────────────────────────────
-function groupBy(arr, keyFn) {
-  return arr.reduce((acc, item) => {
-    const k = keyFn(item);
-    (acc[k] = acc[k] || []).push(item);
-    return acc;
-  }, {});
-}
+  function renderTab(tab) {
+    const content = document.getElementById('content');
+    if (allRecords.length === 0) {
+      content.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">まだデータがありません。</div>
+        </div>`;
+      return;
+    }
+    if (tab === 'daily')   renderDaily(content);
+    if (tab === 'weekly')  renderWeekly(content);
+    if (tab === 'monthly') renderMonthly(content);
+    if (tab === 'yearly')  renderYearly(content);
+  }
 
-function parseDate(str) {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
+  // ── Daily ────────────────────────────────────────────────
+  function renderDaily(container) {
+    const rows = allRecords.map(r => {
+      const d     = parseDate(r.trade_date);
+      const label = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} (${DAY[d.getDay()]})`;
+      return buildRow(r.trade_date, label, [r], true);
+    });
+    container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
+    bindRows();
+  }
 
-function pad(n) { return String(n).padStart(2, '0'); }
+  // ── Weekly ───────────────────────────────────────────────
+  function renderWeekly(container) {
+    const weeks  = groupBy(allRecords, r => weekKey(r.trade_date));
+    const sorted = Object.entries(weeks).sort((a, b) => b[0].localeCompare(a[0]));
+    const rows   = sorted.map(([key, recs]) => {
+      const { start, end } = weekRange(key);
+      const label = `${fmtDate(start)} 〜 ${fmtDate(end)}`;
+      return buildRow(key, label, recs, false);
+    });
+    container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
+    bindRows();
+  }
 
-const DAYS = ['日','月','火','水','木','金','土'];
-function dayName(d) { return DAYS[d.getDay()]; }
+  // ── Monthly ──────────────────────────────────────────────
+  function renderMonthly(container) {
+    const months = groupBy(allRecords, r => r.trade_date.substring(0, 7));
+    const sorted = Object.entries(months).sort((a, b) => b[0].localeCompare(a[0]));
+    const rows   = sorted.map(([key, recs]) => {
+      const [y, m] = key.split('-');
+      const label  = `${y}年${parseInt(m)}月`;
+      return buildRow(key, label, recs, false);
+    });
+    container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
+    bindRows();
+  }
 
-function fmtDate(d) {
-  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
-}
+  // ── Yearly ───────────────────────────────────────────────
+  function renderYearly(container) {
+    const years  = groupBy(allRecords, r => r.trade_date.substring(0, 4));
+    const sorted = Object.entries(years).sort((a, b) => b[0].localeCompare(a[0]));
+    const rows   = sorted.map(([key, recs]) => {
+      return buildRow(key, `${key}年`, recs, false);
+    });
+    container.innerHTML = `<div class="period-list">${rows.join('')}</div>`;
+    bindRows();
+  }
 
-// Week key: ISO week (Monday-based)
-function weekKey(dateStr) {
-  const d = parseDate(dateStr);
-  const day = d.getDay(); // 0=Sun
-  const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
-  const mon = new Date(d);
-  mon.setDate(d.getDate() + diff);
-  return mon.toISOString().substring(0, 10);
-}
+  // ── Row builder ──────────────────────────────────────────
+  function buildRow(key, label, records, isDay) {
+    const agg  = aggregate(records);
+    const wr   = agg.settlements > 0 ? (agg.wins / agg.settlements * 100).toFixed(1) : 0;
+    const sign = agg.pnl >= 0 ? '+' : '';
+    const pnlStr   = `${sign}$${Math.abs(agg.pnl).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    const pnlClass = agg.pnl >= 0 ? 'val-green' : 'val-red';
 
-function weekRange(monStr) {
-  const start = parseDate(monStr);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  return { start, end };
-}
+    let detail = '';
 
-// ── Modal ─────────────────────────────────────────────
-function openModal(url) {
-  document.getElementById('modal-img').src = url;
-  document.getElementById('modal').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  document.getElementById('modal-img').src = '';
-}
-document.getElementById('modal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
-});
+    if (isDay) {
+      const r = records[0];
+      const imgPart = r.screenshot_url
+        ? `<img class="detail-screenshot" src="${r.screenshot_url}" alt="取引証拠" onclick="openModal('${r.screenshot_url}')" loading="lazy">`
+        : `<div class="detail-no-img">スクリーンショットなし</div>`;
+      detail = `<div class="detail-inner">${imgPart}</div>`;
+    } else {
+      const subRows = records
+        .sort((a, b) => b.trade_date.localeCompare(a.trade_date))
+        .map(r => {
+          const d  = parseDate(r.trade_date);
+          const dl = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} (${DAY[d.getDay()]})`;
+          const sp = r.pnl >= 0 ? '+' : '';
+          const sc = r.pnl >= 0 ? 'val-green' : 'val-red';
+          const click = r.screenshot_url ? `onclick="openModal('${r.screenshot_url}')"` : '';
+          return `
+            <div class="sub-day" ${click}>
+              <div class="sub-day-date">${dl}</div>
+              <div class="sub-day-pills">
+                <span class="mini-pill">決済 ${r.settlements}回</span>
+                <span class="mini-pill win">勝 ${r.wins}</span>
+                <span class="mini-pill lose">負 ${r.losses}</span>
+                <span class="mini-pill">勝率 ${r.settlements>0?(r.wins/r.settlements*100).toFixed(1):0}%</span>
+              </div>
+              <div class="sub-day-pnl ${sc}">${sp}$${Math.abs(r.pnl).toLocaleString('en-US',{maximumFractionDigits:2})}</div>
+            </div>`;
+        }).join('');
+      detail = `<div class="detail-inner"><div class="sub-days">${subRows}</div></div>`;
+    }
 
-// ── Start ─────────────────────────────────────────────
-init();
+    return `
+      <div class="period-row" data-key="${key}">
+        <div class="period-head">
+          <div class="period-left">
+            <div class="period-date">${label}</div>
+            <div class="period-mini-stats">
+              <span class="mini-pill">決済 ${agg.settlements}回</span>
+              <span class="mini-pill win">勝 ${agg.wins}</span>
+              <span class="mini-pill lose">負 ${agg.losses}</span>
+              <span class="mini-pill">勝率 ${wr}%</span>
+            </div>
+          </div>
+          <div class="period-right">
+            <div class="period-pnl ${pnlClass}">${pnlStr}</div>
+            <div class="expand-icon">▾</div>
+          </div>
+        </div>
+        <div class="period-detail">${detail}</div>
+      </div>`;
+  }
+
+  function bindRows() {
+    document.querySelectorAll('.period-row').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.tagName === 'IMG') return;
+        row.classList.toggle('open');
+      });
+    });
+  }
+
+  // ── Utils ─────────────────────────────────────────────────
+  function groupBy(arr, keyFn) {
+    return arr.reduce((acc, item) => {
+      const k = keyFn(item);
+      (acc[k] = acc[k] || []).push(item);
+      return acc;
+    }, {});
+  }
+
+  function parseDate(str) {
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  const DAY = ['日','月','火','水','木','金','土'];
+
+  function fmtDate(d) {
+    return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+  }
+
+  function weekKey(dateStr) {
+    const d   = parseDate(dateStr);
+    const day = d.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    const mon = new Date(d);
+    mon.setDate(d.getDate() + diff);
+    return mon.toISOString().substring(0, 10);
+  }
+
+  function weekRange(monStr) {
+    const start = parseDate(monStr);
+    const end   = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end };
+  }
+
+  // ── Modal ─────────────────────────────────────────────────
+  function openModal(url) {
+    document.getElementById('modal-img').src = url;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.getElementById('modal-img').src = '';
+  }
+
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Start ─────────────────────────────────────────────────
+  init();
 </script>
 </body>
 </html>
